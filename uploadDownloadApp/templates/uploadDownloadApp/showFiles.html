@@ -83,8 +83,8 @@
         fail: function(e, data){
           $("#javascriptErrorMessage").css("display", "block");
           var outStr = "";
-          Object.keys(data.messages).forEach(function(key){
-            outStr += "Error: " + data.messages[key] + "   "
+          Object.keys(data.jqXHR.responseJSON).forEach(function(key){
+            outStr += "Error: " + data.jqXHR.responseJSON[key] + "   "
           });
           $("#javascriptErrorMessage").text(outStr);
         },
@@ -105,7 +105,11 @@
                     {
                       alert("UPLOAD UNSUCCESSFUL");
                     }
-                }
+                },
+                error: function(data){
+                  $("#javascriptErrorMessage").css("display", "block");
+                  $("#javascriptErrorMessage").text("ERROR OCCURED after upload:" + data.responseText);
+                },
             });
         },
       });
