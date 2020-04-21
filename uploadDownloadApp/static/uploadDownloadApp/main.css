@@ -1,0 +1,24 @@
+.loginMargin{
+    margin-top: 2%;
+    margin-right: 2%;
+    margin-left: 2%;
+}
+
+#mainTitleOverrideFormatting{
+    margin-bottom: 0;
+}
+
+.form-as-ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.form-as-ul li{
+    margin: 10px 0;
+}
+
+.form-as-ul input{
+    width: 100%;
+}

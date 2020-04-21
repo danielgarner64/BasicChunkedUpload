@@ -1,0 +1,162 @@
+{% extends 'uploadDownloadApp/base.html' %}
+
+{% block content_above_message %}
+{% if request.user.is_superuser %}
+{% if upload_form %}
+  <div class="p-3 mb-2 bg-light text-dark">
+    <h3>Upload New File</h3>
+    <form action="{% url 'uploadDownloadApp:upload' source_page %}" method="POST" enctype="multipart/form-data" id="uploadForm_id">
+        {% csrf_token %}
+        <ul class="form-as-ul">
+          {{ upload_form.as_ul }}
+          <li>
+            <input type="hidden" name="source_page" id="id_source_page" value="{{ source_page }}">
+          </li>
+        </ul>
+    </form>
+    <div class="progress" id="upload_progress"  style="height: 30px;">
+      <div id="upload_progress_bar" class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div id="messages"></div>
+    <script type="text/javascript">
+      // Has to be global because the md5 is calculated asynchronously.
+      // Note this is a race condition.
+      var md5 = "";
+      function calculate_md5(file, chunk_size) {
+        var innerMd5 = "";
+        var slice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+            chunks = chunks = Math.ceil(file.size / chunk_size),
+            current_chunk = 0,
+            spark = new SparkMD5.ArrayBuffer();
+        function onload(e) {
+          spark.append(e.target.result);  // append chunk
+          current_chunk++;
+          if (current_chunk < chunks) {
+            read_next_chunk();
+          } else {
+            md5 = spark.end();
+          }
+        };
+        function read_next_chunk() {
+          var reader = new FileReader();
+          reader.onload = onload;
+          var start = current_chunk * chunk_size,
+              end = Math.min(start + chunk_size, file.size);
+          reader.readAsArrayBuffer(slice.call(file, start, end));
+        };
+        read_next_chunk();
+      }
+
+      var csrf = $("input[name='csrfmiddlewaretoken']")[0].value,
+          form_data = [],
+          max_chunk_size=10000; //10kB for debug only - //10000000; // 10MB
+
+      $("#uploadForm_id").fileupload({
+        url: "{% url 'uploadDownloadApp:chunkedUpload' %}",
+        dataType: "json",
+        maxChunkSize: max_chunk_size,
+        formData: form_data,
+        add: function(e, data){
+            $("#javascriptErrorMessage").css("display", "none");
+            $("#messages").empty();
+            form_data.splice(0); // Remove all data for next upload
+            form_data.push({"name": "csrfmiddlewaretoken", "value": csrf});
+            // This is a race condition as the function is async but the md5 will always be faster than the upload
+            calculate_md5(data.files[0], max_chunk_size);
+            data.submit();
+        },
+        chunkdone: function(e,data){
+            if(form_data.length > 0 && "upload_id" != form_data[0]["name"]) {
+              // insert upload_id to first index
+              form_data.splice(0, 0, {"name": "upload_id", "value": data.result.upload_id});
+            }
+            // DEBUG ONLY
+            //$("#messages").append($('<p>').text(JSON.stringify(data.result)));
+
+            var progress = parseInt(data.loaded / data.total * 100.0, 10);
+            $('#upload_progress_bar').css(
+                'width',
+                progress + '%'
+            );
+            $('#upload_progress_bar').text(progress + '%');
+        },
+        fail: function(e, data){
+          $("#javascriptErrorMessage").css("display", "block");
+          var outStr = "";
+          Object.keys(data.messages).forEach(function(key){
+            outStr += "Error: " + data.messages[key] + "   "
+          });
+          $("#javascriptErrorMessage").text(outStr);
+        },
+        done: function(e, data) {
+            var all_form_data = $(this).serializeArray();
+            all_form_data.push({"name": "upload_id", "value": data.result.upload_id});
+            all_form_data.push({"name": "md5", "value": md5});
+            $.ajax({
+                type: "POST",
+                url: "{% url 'uploadDownloadApp:chunkedUploadComplete' %}",
+                data: all_form_data,
+                dataType: "json",
+                success: function(data){
+                    if(data.status == "success"){
+                        window.location.replace(window.location.href);
+                    }
+                    else
+                    {
+                      alert("UPLOAD UNSUCCESSFUL");
+                    }
+                }
+            });
+        },
+      });
+    </script>
+  </div>
+  <br/>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col" colspan="4"><center><h1>{{ title }}</h1></center></th>
+    </tr>
+    <tr>
+      <th scope="col">File Name</th>
+      <th scope="col">Description</th>
+      <th scope="col">Upload Date</th>
+      <th scope="col">Download</th>
+      {% if request.user.is_superuser %}
+      <th scope="col">Delete</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for file in files %}
+    <tr>
+      <td>{{ file.file_name }}</td>
+      <td>{{ file.description }}</td>
+      <td>{{ file.uploaded_at }}</td>
+      <td>
+        <form action="{% url 'uploadDownloadApp:download' %}" method="GET">
+          <input type="hidden" name="fileIdToDownload" value={{ file.id }}>
+          <button type="submit" class="btn btn-primary">Download</button>
+        </form>
+
+      </td>
+      {% if request.user.is_superuser %}
+      <td>
+        <form action="{% url 'uploadDownloadApp:delete' source_page %}" method="POST">{% csrf_token %}
+          <input type="hidden" name="fileIdToDelete" value={{ file.id }}>
+          <button type="submit" class="btn btn-primary">Delete</button>
+        </form>
+      </td>
+      {% endif %}
+
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

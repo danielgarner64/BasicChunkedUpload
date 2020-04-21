@@ -1,0 +1,9 @@
+{% extends 'uploadDownloadApp/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<form action="{% url 'uploadDownloadApp:login' %}" method="POST">
+    {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" class="btn btn-primary">Login</button>
+</form>
+{% endblock %}
