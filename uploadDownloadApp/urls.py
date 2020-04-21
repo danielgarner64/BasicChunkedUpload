@@ -2,7 +2,7 @@ from django.urls import path, include, re_path
 from . import views
 from django.urls import reverse_lazy
 from django.views.generic import RedirectView
-from DjangoUpDown import settings_dev
+from DjangoUpDown import settings
 from django.contrib.auth import views as auth_views
 from django.views import defaults
 
@@ -28,5 +28,4 @@ urlpatterns = [
     path("chunkedUploadComplete/", views.MyChunkedUploadCompleteView.as_view(), name="chunkedUploadComplete"),
     path("chunkedUpload/", views.MyChunkedUploadView.as_view(), name="chunkedUpload"),
 ]
-#+ static(settings_dev.STATIC_ROOT, document_root=settings_dev.STATIC_ROOT) # TODO DEBUG ONLY STATIC ROOT
 

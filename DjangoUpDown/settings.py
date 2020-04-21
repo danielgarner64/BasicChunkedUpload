@@ -25,7 +25,7 @@ SECRET_KEY = 'nwmote!xt3yi7zh@@k^47d($9-55j0v4r0p_bl%a+i-qmai0qo'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["caterpillar.orphan.network"]
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -103,16 +103,6 @@ DATABASES = {
     }
 }
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#        'NAME': 'postgres',
-#        'USER': 'postgres',
-#        'HOST': 'db',
-#        'PORT': '5432',
-#    }
-#}
-
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
@@ -146,7 +136,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/uploadDownloadApp/static/'
-STATIC_ROOT = '/uploadDownloadApp/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'uploadDownloadApp', "static")
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

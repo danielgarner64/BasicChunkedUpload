@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, reverse, get_object_or_404
 from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
 from braces.views import LoginRequiredMixin, SuperuserRequiredMixin
 from uploadDownloadApp.models import File, ChunkedFile
-from uploadDownloadApp.utils import get_unique_file_name, create_file_in_db_with_existing_file
+from uploadDownloadApp.utils import create_file_in_db_with_existing_file
 from django.contrib.auth.decorators import login_required
 import datetime
 from .forms import FileForm
@@ -96,6 +96,32 @@ class MyChunkedUploadCompleteView(LoginRequiredMixin, SuperuserRequiredMixin, Ch
     def check_permissions(self, request):
         pass
 
+    """
+    CODE THAT CAUSES ERROR
+    """
+    def on_completion(self, uploaded_file, request):
+        uploaded_file.file.close()
+
+        chunked_upload = get_object_or_404(ChunkedFile, upload_id=request.POST.get("upload_id"))
+        chunked_upload.delete(delete_file=False)
+
+        uploaded_file = create_file_in_db_with_existing_file(
+            src_path=chunked_upload.file.path,
+            file_name=chunked_upload.filename,
+            description=request.POST.get("description", ""),
+            user=request.user,
+            file_size=chunked_upload.file.size,
+            file_md5=chunked_upload.md5
+        )
+
+    # What the get_response_data should do. (this shouldn't generate any errors
+    def get_response_data(self, chunked_upload, request):
+        redirect_to = "uploadDownloadApp:" + request.POST.get("source_page", "home")
+        messages.add_message(request, messages.SUCCESS, "Successfully uploaded file")
+        return {"status": "success", "redirect_url": reverse(redirect_to)}
+
+
+""" CODE THAT WILL WORK
     def get_response_data(self, chunked_upload, request):
         chunked_upload.file.close()
         chunked_upload.delete(delete_file=False)
@@ -111,3 +137,4 @@ class MyChunkedUploadCompleteView(LoginRequiredMixin, SuperuserRequiredMixin, Ch
         redirect_to = "uploadDownloadApp:" + request.POST.get("source_page", "home")
         messages.add_message(request, messages.SUCCESS, f"Successfully uploaded file {uploaded_file.file.name}")
         return {"status": "success", "redirect_url": reverse(redirect_to)}
+"""

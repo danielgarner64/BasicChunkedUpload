@@ -5,7 +5,7 @@
 {% if upload_form %}
   <div class="p-3 mb-2 bg-light text-dark">
     <h3>Upload New File</h3>
-    <form action="{% url 'uploadDownloadApp:upload' source_page %}" method="POST" enctype="multipart/form-data" id="uploadForm_id">
+    <form method="POST" enctype="multipart/form-data" id="uploadForm_id">
         {% csrf_token %}
         <ul class="form-as-ul">
           {{ upload_form.as_ul }}
