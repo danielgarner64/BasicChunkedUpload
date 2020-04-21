@@ -3,6 +3,8 @@
 Note this server has an intentional bug in it in the views.py file.
 The bottom function on_completion will generate an error as a file is being written to and moved simutaneously.
 
+Also the chunk size for upload in the java script is very small (only 1kB, this is for debug only to see the progress bar) increase it if you want any speed in uploads.
+
 To install run the following commands. (Python 3.7 or greater)
 ```
 # Create the virtual environment
