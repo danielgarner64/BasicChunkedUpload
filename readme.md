@@ -10,6 +10,9 @@ To install run the following commands. (Python 3.7 or greater)
 # Create the virtual environment
 python -m venv venv
 
+# activate venv (cmd for windows is):
+venv/Scripts/activate.bat
+
 # Install dependencies
 pip install -r requirements.txt
 
